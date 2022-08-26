@@ -1,0 +1,65 @@
+version: "3.7"
+
+services:
+
+  db:
+    image: mysql:5.7
+    container_name: db
+    environment:
+      MYSQL_ROOT_PASSWORD: restest
+      MYSQL_DATABASE: restest
+      MYSQL_USER: restest
+      MYSQL_PASSWORD: restest
+    ports:
+      - "3306:3306"
+    volumes:
+      - restest-data-volume:/var/lib/mysql
+    networks:
+      - restest-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8081:80
+    networks:
+      - restest-network
+
+  restest-backend:
+    image: lucasperezweb/restest-backend-spring:latest
+    container_name: restest-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    #restart: always
+    networks:
+      - restest-network
+    volumes:
+      - restest-backend-volume:/src
+
+  restest-frontend:
+    image: lucasperezweb/restest-frontend:latest
+    container_name: restest-frontend
+    ports:
+      - 3000:3000
+    networks:
+      - restest-network
+    volumes:
+      - restest-frontend-volume:/src  
+
+volumes:
+  restest-data-volume: null
+  restest-backend-volume: null
+  restest-frontend-volume: null
+
+networks:
+  restest-network:
+    external: true
